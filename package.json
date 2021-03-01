@@ -6,6 +6,7 @@
   "scripts": {
     "build": "rimraf ./dist && tsc",
     "prepublishOnly": "rimraf ./dist && tsc",
+    "link": "npm link @sora-soft/framework",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": "git@github.com/sora-soft/database-component.git",
@@ -16,7 +17,7 @@
   },
   "homepage": "https://github.com/sora-soft/database-component#readme",
   "dependencies": {
-    "@sora-soft/framework": "^1.0.7",
+    "@sora-soft/framework": "^1.0.8",
     "mongodb": "^3.6.4",
     "mysql2": "^2.2.5",
     "pg": "^8.5.1",
