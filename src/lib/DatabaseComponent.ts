@@ -42,6 +42,9 @@ class DatabaseComponent extends Component {
   }
 
   get manager() {
+    if (!this.connection_)
+      throw new DatabaseError(DatabaseErrorCode.ERR_COMPONENT_NOT_CONNECTED, `ERR_COMPONENT_NOT_CONNECTED, name=${this.name_}`);
+
     return this.connection.manager;
   }
 
