@@ -41,6 +41,10 @@ class DatabaseComponent extends Component {
     return this.connection_;
   }
 
+  get manager() {
+    return this.connection.manager;
+  }
+
   private databaseOptions_: IDatabaseComponentOptions;
   private entities_: any[];
   private connection_: Connection;
