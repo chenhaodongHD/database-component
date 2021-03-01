@@ -5,11 +5,14 @@ import {DatabaseErrorCode} from './DatabaseErrorCode';
 
 export interface IDatabaseComponentOptions extends IComponentOptions {
   database: ConnectionOptions;
-  // typeorm 直接用 Class 作为 entities，在这里没有办法指定类型
-  entities: Array<any>;
 }
 
 class DatabaseComponent extends Component {
+
+  constructor(name: string, entities: any[]) {
+    super(name);
+    this.entities_ = entities;
+  }
 
   protected setOptions(options: IDatabaseComponentOptions) {
     this.databaseOptions_ = options;
@@ -18,7 +21,9 @@ class DatabaseComponent extends Component {
   protected async connect() {
     this.connection_ = await createConnection({
       ...this.databaseOptions_.database,
-      entities: this.databaseOptions_.entities,
+      entities: this.entities_,
+      synchronize: true,
+      logging: false,
     });
     Runtime.frameLogger.success('component.database', { event: 'connect', target: this.databaseOptions_.database });
   }
@@ -37,6 +42,7 @@ class DatabaseComponent extends Component {
   }
 
   private databaseOptions_: IDatabaseComponentOptions;
+  private entities_: any[];
   private connection_: Connection;
 }
 
