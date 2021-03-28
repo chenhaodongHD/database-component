@@ -1,4 +1,4 @@
-import {Component, IComponentOptions, Runtime} from '@sora-soft/framework';
+import {Component, IComponentOptions, Runtime, Utility} from '@sora-soft/framework';
 import {createConnection, ConnectionOptions, Connection} from 'typeorm';
 import {DatabaseError} from './DatabaseError';
 import {DatabaseErrorCode} from './DatabaseErrorCode';
@@ -22,16 +22,16 @@ class DatabaseComponent extends Component {
     this.connection_ = await createConnection({
       ...this.databaseOptions_.database,
       entities: this.entities_,
-      synchronize: true,
+      synchronize: false,
       logging: false,
     });
-    Runtime.frameLogger.success('component.database', { event: 'connect', target: this.databaseOptions_.database });
+    Runtime.frameLogger.success('component.database', { event: 'connect', target: Utility.hideKeys(this.databaseOptions_.database, ['password'] as any) });
   }
 
   protected async disconnect() {
     await this.connection_.close();
     this.connection_ = null;
-    Runtime.frameLogger.success('component.database', { event: 'disconnect', target: this.databaseOptions_.database });
+    Runtime.frameLogger.success('component.database', { event: 'disconnect', target: Utility.hideKeys(this.databaseOptions_.database, ['password'] as any) });
   }
 
   get connection() {
@@ -46,6 +46,10 @@ class DatabaseComponent extends Component {
       throw new DatabaseError(DatabaseErrorCode.ERR_COMPONENT_NOT_CONNECTED, `ERR_COMPONENT_NOT_CONNECTED, name=${this.name_}`);
 
     return this.connection.manager;
+  }
+
+  get entities() {
+    return this.entities_;
   }
 
   private databaseOptions_: IDatabaseComponentOptions;
