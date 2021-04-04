@@ -28,13 +28,11 @@ class DatabaseComponent extends Component {
       synchronize: false,
       logging: false,
     });
-    Runtime.frameLogger.success('component.database', { event: 'connect', target: Utility.hideKeys(this.databaseOptions_.database, ['password'] as any) });
   }
 
   protected async disconnect() {
     await this.connection_.close();
     this.connection_ = null;
-    Runtime.frameLogger.success('component.database', { event: 'disconnect', target: Utility.hideKeys(this.databaseOptions_.database, ['password'] as any) });
   }
 
   get connection() {
@@ -57,6 +55,10 @@ class DatabaseComponent extends Component {
 
   get version() {
     return pkg.version;
+  }
+
+  logOptions() {
+    return Utility.hideKeys(this.databaseOptions_.database, ['password'] as any);
   }
 
   private databaseOptions_: IDatabaseComponentOptions;
