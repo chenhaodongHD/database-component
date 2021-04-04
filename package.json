@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/sora-soft/database-component#readme",
   "dependencies": {
-    "@sora-soft/framework": "^1.0.9",
+    "@sora-soft/framework": "^1.0.13",
     "mongodb": "^3.6.4",
     "mysql2": "^2.2.5",
     "pg": "^8.5.1",

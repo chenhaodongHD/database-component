@@ -3,6 +3,9 @@ import {createConnection, ConnectionOptions, Connection} from 'typeorm';
 import {DatabaseError} from './DatabaseError';
 import {DatabaseErrorCode} from './DatabaseErrorCode';
 
+// tslint:disable-next-line
+const pkg = require('../../package.json');
+
 export interface IDatabaseComponentOptions extends IComponentOptions {
   database: ConnectionOptions;
 }
@@ -50,6 +53,10 @@ class DatabaseComponent extends Component {
 
   get entities() {
     return this.entities_;
+  }
+
+  get version() {
+    return pkg.version;
   }
 
   private databaseOptions_: IDatabaseComponentOptions;
