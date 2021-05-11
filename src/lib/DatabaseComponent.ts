@@ -23,6 +23,7 @@ class DatabaseComponent extends Component {
 
   protected async connect() {
     this.connection_ = await createConnection({
+      name: this.name_,
       ...this.databaseOptions_.database,
       entities: this.entities_,
       synchronize: false,
