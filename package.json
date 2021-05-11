@@ -18,11 +18,7 @@
   "homepage": "https://github.com/sora-soft/database-component#readme",
   "dependencies": {
     "@sora-soft/framework": "^1.0.13",
-    "mongodb": "^3.6.6",
-    "mysql2": "^2.2.5",
-    "pg": "^8.5.1",
     "reflect-metadata": "^0.1.13",
-    "sqlite3": "^5.0.2",
     "typeorm": "^0.2.32"
   },
   "devDependencies": {
