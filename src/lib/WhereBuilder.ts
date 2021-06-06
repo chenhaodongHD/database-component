@@ -26,7 +26,7 @@ type Condition<T> = {
 export type WhereCondition<T> = Condition<T> | Array<Condition<T>>;
 
 class WhereBuilder {
-  static buildOperator(operator: WhereOperators, value: any) {
+  private static buildOperator(operator: WhereOperators, value: any) {
     switch (operator) {
       case WhereOperators.any:
         return Any(value);

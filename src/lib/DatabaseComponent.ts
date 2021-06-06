@@ -3,7 +3,7 @@ import {createConnection, ConnectionOptions, Connection, EntityTarget, OrderByCo
 import {MysqlConnectionOptions} from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import {DatabaseError} from './DatabaseError';
 import {DatabaseErrorCode} from './DatabaseErrorCode';
-import {WhereCondition} from './WhereBuilder';
+import {WhereBuilder, WhereCondition} from './WhereBuilder';
 
 // tslint:disable-next-line
 const pkg = require('../../package.json');
@@ -65,7 +65,7 @@ class DatabaseComponent extends Component {
       sqlBuilder = sqlBuilder.select(select);
     }
     if (options.where) {
-      sqlBuilder = sqlBuilder.where(options.where);
+      sqlBuilder = sqlBuilder.where(WhereBuilder.build(options.where));
     }
     if (options.order) {
       sqlBuilder = sqlBuilder.orderBy(options.order);
