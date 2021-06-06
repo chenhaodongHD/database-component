@@ -1,13 +1,24 @@
 import {Component, IComponentOptions, Runtime, Utility} from '@sora-soft/framework';
-import {createConnection, ConnectionOptions, Connection} from 'typeorm';
+import {createConnection, ConnectionOptions, Connection, EntityTarget, OrderByCondition} from 'typeorm';
+import {MysqlConnectionOptions} from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import {DatabaseError} from './DatabaseError';
 import {DatabaseErrorCode} from './DatabaseErrorCode';
+import {WhereCondition} from './WhereBuilder';
 
 // tslint:disable-next-line
 const pkg = require('../../package.json');
 
 export interface IDatabaseComponentOptions extends IComponentOptions {
   database: ConnectionOptions;
+}
+
+export interface ISqlOptions<Entity = any> {
+  select?: string[];
+  relations?: string[];
+  order?: OrderByCondition,
+  offset?: number;
+  limit?: number;
+  where?: WhereCondition<Entity>;
 }
 
 class DatabaseComponent extends Component {
@@ -34,6 +45,38 @@ class DatabaseComponent extends Component {
   protected async disconnect() {
     await this.connection_.close();
     this.connection_ = null;
+  }
+
+  buildSQL<T = any>(entity: EntityTarget<T>, options: ISqlOptions<T>) {
+    let sqlBuilder = this.manager.getRepository(entity).createQueryBuilder('self');
+    if (options.relations) {
+      options.relations.forEach((relation) => {
+        sqlBuilder = sqlBuilder.leftJoinAndSelect(`self.${relation}`, relation);
+      });
+    }
+    if (options.select) {
+      const select = options.select.map((s) => {
+        if (s.includes('.')) {
+          return s;
+        } else {
+          return `self.${s}`;
+        }
+      });
+      sqlBuilder = sqlBuilder.select(select);
+    }
+    if (options.where) {
+      sqlBuilder = sqlBuilder.where(options.where);
+    }
+    if (options.order) {
+      sqlBuilder = sqlBuilder.orderBy(options.order);
+    }
+    if (options.limit) {
+      sqlBuilder = sqlBuilder.limit(options.limit);
+    }
+    if (options.offset) {
+      sqlBuilder = sqlBuilder.offset(options.offset);
+    }
+    return sqlBuilder;
   }
 
   get connection() {
