@@ -101,6 +101,10 @@ class DatabaseComponent extends Component {
     return pkg.version;
   }
 
+  get connectionOptions() {
+    return this.databaseOptions_.database;
+  }
+
   logOptions() {
     return Utility.hideKeys(this.databaseOptions_.database, ['password'] as any);
   }
