@@ -3,6 +3,7 @@ import {createConnection, ConnectionOptions, Connection, EntityTarget, OrderByCo
 import {MysqlConnectionOptions} from 'typeorm/driver/mysql/MysqlConnectionOptions';
 import {DatabaseError} from './DatabaseError';
 import {DatabaseErrorCode} from './DatabaseErrorCode';
+import {SQLUtility} from './SQLUtility';
 import {WhereBuilder, WhereCondition} from './WhereBuilder';
 
 // tslint:disable-next-line
@@ -58,39 +59,6 @@ class DatabaseComponent extends Component {
     this.connection_ = null;
   }
 
-  prepareQuery(query: QueryBuilder<any>) {
-    const [sql, params] = query.getQueryAndParameters();
-    let finalSQL = sql;
-    const parameters: any = {};
-
-    const m = sql.match(/\?/g);
-    if (m === null) {
-      return {sql, parameters};
-    }
-    let index = 0;
-    let value = null;
-    for (const m0 of m) {
-      switch (typeof params[index]) {
-        case 'string':
-          value = `'${params[index]}'`;
-          break;
-
-        default:
-          value = params[index];
-          break;
-      }
-
-      finalSQL = finalSQL.replace(m0, `:value${index}`);
-      parameters[`value${index}`] = params[index];
-      index++;
-    }
-
-    return {
-      sql: finalSQL,
-      parameters,
-    };
-  };
-
   buildSQL<T = any>(entity: EntityTarget<T>, options: ISqlOptions<T>) {
     let sqlBuilder = this.manager.getRepository(entity).createQueryBuilder('self');
     if (options.relations && options.relations.length) {
@@ -109,7 +77,7 @@ class DatabaseComponent extends Component {
         innerJoinBuilder.orderBy(options.order);
       }
 
-      const {sql, parameters} = this.prepareQuery(innerJoinBuilder);
+      const {sql, parameters} = SQLUtility.prepareQuery(...innerJoinBuilder.getQueryAndParameters());
       sqlBuilder.innerJoin(`(${sql})`, 'inner', `inner.${options.innerJoinKey} = self.${options.innerJoinKey}`);
       sqlBuilder.setParameters(parameters);
 

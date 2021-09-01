@@ -5,6 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "rimraf ./dist && tsc",
+    "dev": "npm run build && node ./dist/test",
     "prepublishOnly": "rimraf ./dist && tsc",
     "link": "npm link @sora-soft/framework",
     "test": "echo \"Error: no test specified\" && exit 1"

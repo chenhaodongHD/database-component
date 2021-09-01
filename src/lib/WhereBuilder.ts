@@ -59,9 +59,9 @@ class WhereBuilder {
     }
   }
 
-  static build<T>(value: WhereCondition<T>) {
+  static build<T>(value: WhereCondition<T>): Condition<T> | Condition<T>[] {
     if (Array.isArray(value)) {
-      return value.map(v => this.build(v));
+      return value.map(v => this.build(v)) as Condition<T>[];
     }
 
     if (value instanceof Object) {
@@ -78,6 +78,85 @@ class WhereBuilder {
     }
 
     return value;
+  }
+
+  static buildSQL<T>(value: WhereCondition<T>): {sql: string, parameters: any[]} {
+    if (Array.isArray(value)) {
+      const results = value.map(v => this.buildSQL(v));
+      return {
+        sql: results.map(r => `(${r.sql})`).join(' or '),
+        parameters: results.map(r => r.parameters).flat(),
+      }
+    }
+
+    const sql: string[] = [];
+    const parameters: any[] = [];
+    if (value instanceof Object) {
+      Object.entries(value).map(([k, v]) => {
+        const keys = Object.keys(v);
+
+        if (keys.length === 1 && keys[0].startsWith('$')) {
+          switch (keys[0]) {
+            case WhereOperators.between:
+              sql.push(`(${k} between ? and ?)`);
+              parameters.push(v[keys[0]][0], v[keys[0]][1]);
+              break;
+            case WhereOperators.eq:
+              sql.push(`(${k} = ?)`);
+              parameters.push(v[keys[0]]);
+              break;
+            case WhereOperators.iLike:
+              sql.push(`(${k} like ?)`);
+              parameters.push(v[keys[0]]);
+              break;
+            case WhereOperators.in:
+              sql.push(`(${k} in (?))`);
+              parameters.push(v[keys[0]]);
+              break;
+            case WhereOperators.isNull:
+              if (v[keys[0]]) {
+                sql.push(`(${k} is null)`);
+                break;
+              } else {
+                sql.push(`(${k} is not null)`);
+                break;
+              }
+            case WhereOperators.lt:
+              sql.push(`(${k} < ?)`);
+              parameters.push(v[keys[0]]);
+              break;
+            case WhereOperators.lte:
+              sql.push(`(${k} <= ?)`);
+              parameters.push(v[keys[0]]);
+              break;
+            case WhereOperators.like:
+              sql.push(`(${k} like ?)`);
+              parameters.push(v[keys[0]]);
+              break;
+            case WhereOperators.gt:
+              sql.push(`(${k} > ?)`);
+              parameters.push(v[keys[0]]);
+              break;
+            case WhereOperators.gte:
+              sql.push(`(${k} >= ?)`);
+              parameters.push(v[keys[0]]);
+              break;
+            case WhereOperators.not:
+              sql.push(`(NOT(${k} = ?))`);
+              parameters.push(v[keys[0]]);
+              break;
+          }
+        } else {
+          sql.push(`(${k} = ?)`);
+          parameters.push(v);
+        }
+      });
+    }
+
+    return {
+      sql: sql.join(' and '),
+      parameters,
+    }
   }
 }
 
