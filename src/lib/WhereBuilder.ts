@@ -1,4 +1,4 @@
-import {Any, Between, Equal, ILike, In, IsNull, LessThan, LessThanOrEqual, Like, MoreThan, MoreThanOrEqual, Not} from 'typeorm';
+import {Any, Between, Equal, FindConditions, ILike, In, IsNull, LessThan, LessThanOrEqual, Like, MoreThan, MoreThanOrEqual, Not, Raw} from 'typeorm';
 
 export enum WhereOperators {
   any = '$any',
@@ -13,6 +13,7 @@ export enum WhereOperators {
   gt = '$gt',
   gte = '$gte',
   not = '$not',
+  raw = '$raw',
 };
 
 type WhereOperatorCondition = {
@@ -56,12 +57,14 @@ class WhereBuilder {
         return MoreThanOrEqual(value);
       case WhereOperators.not:
         return Not(this.build(value));
+      case WhereOperators.raw:
+        return Raw(value);
     }
   }
 
-  static build<T>(value: WhereCondition<T>): Condition<T> | Condition<T>[] {
+  static build<T>(value: WhereCondition<T>): FindConditions<T> | FindConditions<T>[] {
     if (Array.isArray(value)) {
-      return value.map(v => this.build(v)) as Condition<T>[];
+      return value.map(v => this.build(v)) as FindConditions<T>[];
     }
 
     if (value instanceof Object) {
@@ -80,12 +83,20 @@ class WhereBuilder {
     return value;
   }
 
-  static buildSQL<T>(value: WhereCondition<T>): {sql: string, parameters: any[]} {
+  static buildSQL<T>(value: WhereCondition<T>, table?: string): {sql: string, parameters: any[]} {
     if (Array.isArray(value)) {
-      const results = value.map(v => this.buildSQL(v));
+      const results = value.map(v => this.buildSQL(v, table));
       return {
         sql: results.map(r => `(${r.sql})`).join(' or '),
         parameters: results.map(r => r.parameters).flat(),
+      }
+    }
+
+    function getFullKey(key: string) {
+      if (table) {
+        return `${table}.${key}`;
+      } else {
+        return key;
       }
     }
 
@@ -98,56 +109,56 @@ class WhereBuilder {
         if (keys.length === 1 && keys[0].startsWith('$')) {
           switch (keys[0]) {
             case WhereOperators.between:
-              sql.push(`(${k} between ? and ?)`);
+              sql.push(`(${getFullKey(k)} between ? and ?)`);
               parameters.push(v[keys[0]][0], v[keys[0]][1]);
               break;
             case WhereOperators.eq:
-              sql.push(`(${k} = ?)`);
+              sql.push(`(${getFullKey(k)} = ?)`);
               parameters.push(v[keys[0]]);
               break;
             case WhereOperators.iLike:
-              sql.push(`(${k} like ?)`);
+              sql.push(`(${getFullKey(k)} like ?)`);
               parameters.push(v[keys[0]]);
               break;
             case WhereOperators.in:
-              sql.push(`(${k} in (?))`);
+              sql.push(`(${getFullKey(k)} in (?))`);
               parameters.push(v[keys[0]]);
               break;
             case WhereOperators.isNull:
               if (v[keys[0]]) {
-                sql.push(`(${k} is null)`);
+                sql.push(`(${getFullKey(k)} is null)`);
                 break;
               } else {
-                sql.push(`(${k} is not null)`);
+                sql.push(`(${getFullKey(k)} is not null)`);
                 break;
               }
             case WhereOperators.lt:
-              sql.push(`(${k} < ?)`);
+              sql.push(`(${getFullKey(k)} < ?)`);
               parameters.push(v[keys[0]]);
               break;
             case WhereOperators.lte:
-              sql.push(`(${k} <= ?)`);
+              sql.push(`(${getFullKey(k)} <= ?)`);
               parameters.push(v[keys[0]]);
               break;
             case WhereOperators.like:
-              sql.push(`(${k} like ?)`);
+              sql.push(`(${getFullKey(k)} like ?)`);
               parameters.push(v[keys[0]]);
               break;
             case WhereOperators.gt:
-              sql.push(`(${k} > ?)`);
+              sql.push(`(${getFullKey(k)} > ?)`);
               parameters.push(v[keys[0]]);
               break;
             case WhereOperators.gte:
-              sql.push(`(${k} >= ?)`);
+              sql.push(`(${getFullKey(k)} >= ?)`);
               parameters.push(v[keys[0]]);
               break;
             case WhereOperators.not:
-              sql.push(`(NOT(${k} = ?))`);
+              sql.push(`(NOT(${getFullKey(k)} = ?))`);
               parameters.push(v[keys[0]]);
               break;
           }
         } else {
-          sql.push(`(${k} = ?)`);
+          sql.push(`(${getFullKey(k)} = ?)`);
           parameters.push(v);
         }
       });
