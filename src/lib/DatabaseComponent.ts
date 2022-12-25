@@ -1,6 +1,5 @@
-import {Component, IComponentOptions, Runtime, Utility} from '@sora-soft/framework';
-import {createConnection, ConnectionOptions, Connection, EntityTarget, OrderByCondition, QueryBuilder} from 'typeorm';
-import {MysqlConnectionOptions} from 'typeorm/driver/mysql/MysqlConnectionOptions';
+import {Component, IComponentOptions, Utility} from '@sora-soft/framework';
+import {DataSourceOptions, EntityTarget, OrderByCondition, DataSource} from 'typeorm';
 import {DatabaseError} from './DatabaseError';
 import {DatabaseErrorCode} from './DatabaseErrorCode';
 import {SQLUtility} from './SQLUtility';
@@ -10,7 +9,7 @@ import {WhereBuilder, WhereCondition} from './WhereBuilder';
 const pkg = require('../../package.json');
 
 export interface IDatabaseComponentOptions extends IComponentOptions {
-  database: ConnectionOptions;
+  database: DataSourceOptions;
 }
 
 export interface IRelationsSqlOptions<Entity = any> {
@@ -38,6 +37,7 @@ class DatabaseComponent extends Component {
   constructor(name: string, entities: any[]) {
     super(name);
     this.entities_ = entities;
+    this.connected_ = false;
   }
 
   protected setOptions(options: IDatabaseComponentOptions) {
@@ -45,18 +45,25 @@ class DatabaseComponent extends Component {
   }
 
   protected async connect() {
-    this.connection_ = await createConnection({
+    if (this.connected_)
+      return;
+
+    this.dataSource_ = new DataSource({
       name: this.name_,
       ...this.databaseOptions_.database,
       entities: this.entities_,
       synchronize: false,
       logging: false,
     });
+
+    await this.dataSource_.initialize();
+    this.connected_ = true;
   }
 
   protected async disconnect() {
-    await this.connection_.close();
-    this.connection_ = null;
+    await this.dataSource_.destroy();
+    this.dataSource_ = null;
+    this.connected_ = false;
   }
 
   buildSQL<T = any>(entity: EntityTarget<T>, options: ISqlOptions<T>) {
@@ -112,18 +119,24 @@ class DatabaseComponent extends Component {
     return sqlBuilder;
   }
 
-  get connection() {
-    if (!this.connection_)
+  get dataSource() {
+    if (!this.dataSource_)
       throw new DatabaseError(DatabaseErrorCode.ERR_COMPONENT_NOT_CONNECTED, `ERR_COMPONENT_NOT_CONNECTED, name=${this.name_}`);
 
-    return this.connection_;
+    if (!this.dataSource_.isInitialized)
+      throw new DatabaseError(DatabaseErrorCode.ERR_COMPONENT_NOT_INITIALIZED, `ERR_COMPONENT_NOT_INITIALIZED, name=${this.name_}`);
+
+    return this.dataSource_;
   }
 
   get manager() {
-    if (!this.connection_)
+    if (!this.dataSource_)
       throw new DatabaseError(DatabaseErrorCode.ERR_COMPONENT_NOT_CONNECTED, `ERR_COMPONENT_NOT_CONNECTED, name=${this.name_}`);
 
-    return this.connection.manager;
+    if (!this.dataSource_.isInitialized)
+      throw new DatabaseError(DatabaseErrorCode.ERR_COMPONENT_NOT_INITIALIZED, `ERR_COMPONENT_NOT_INITIALIZED, name=${this.name_}`);
+
+    return this.dataSource_.manager;
   }
 
   get entities() {
@@ -134,7 +147,7 @@ class DatabaseComponent extends Component {
     return pkg.version;
   }
 
-  get connectionOptions() {
+  get dataSourceOptions() {
     return this.databaseOptions_.database;
   }
 
@@ -144,7 +157,8 @@ class DatabaseComponent extends Component {
 
   private databaseOptions_: IDatabaseComponentOptions;
   private entities_: any[];
-  private connection_: Connection;
+  private connected_: boolean;
+  private dataSource_: DataSource;
 }
 
 export {DatabaseComponent}

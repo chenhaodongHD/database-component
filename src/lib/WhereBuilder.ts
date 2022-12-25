@@ -1,4 +1,4 @@
-import {Any, Between, Equal, FindConditions, ILike, In, IsNull, LessThan, LessThanOrEqual, Like, MoreThan, MoreThanOrEqual, Not, Raw} from 'typeorm';
+import {Any, Between, Equal, FindOptionsWhere, ILike, In, IsNull, LessThan, LessThanOrEqual, Like, MoreThan, MoreThanOrEqual, Not, Raw} from 'typeorm';
 
 export enum WhereOperators {
   any = '$any',
@@ -62,9 +62,9 @@ class WhereBuilder {
     }
   }
 
-  static build<T>(value: WhereCondition<T>): FindConditions<T> | FindConditions<T>[] {
+  static build<T>(value: WhereCondition<T>): FindOptionsWhere<T> | FindOptionsWhere<T>[] {
     if (Array.isArray(value)) {
-      return value.map(v => this.build(v)) as FindConditions<T>[];
+      return value.map(v => this.build(v)) as FindOptionsWhere<T>[];
     }
 
     if (value instanceof Object) {
