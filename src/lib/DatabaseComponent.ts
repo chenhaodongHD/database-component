@@ -1,5 +1,5 @@
 import {Component, IComponentOptions, Utility} from '@sora-soft/framework';
-import {DataSourceOptions, EntityTarget, OrderByCondition, DataSource} from 'typeorm';
+import {DataSourceOptions, EntityTarget, OrderByCondition, DataSource, ObjectLiteral} from 'typeorm';
 import {DatabaseError} from './DatabaseError';
 import {DatabaseErrorCode} from './DatabaseErrorCode';
 import {SQLUtility} from './SQLUtility';
@@ -12,7 +12,7 @@ export interface IDatabaseComponentOptions extends IComponentOptions {
   database: DataSourceOptions;
 }
 
-export interface IRelationsSqlOptions<Entity = any> {
+export interface IRelationsSqlOptions<Entity extends ObjectLiteral> {
   select?: string[];
   relations: string[];
   innerJoinKey: string;
@@ -22,7 +22,7 @@ export interface IRelationsSqlOptions<Entity = any> {
   where?: WhereCondition<Entity>;
 }
 
-export interface INoRelationsSqlOptions<Entity = any> {
+export interface INoRelationsSqlOptions<Entity extends ObjectLiteral> {
   select?: string[];
   order?: OrderByCondition,
   offset?: number;
@@ -30,7 +30,7 @@ export interface INoRelationsSqlOptions<Entity = any> {
   where?: WhereCondition<Entity>;
 }
 
-export type ISqlOptions<Entity = any> = INoRelationsSqlOptions<Entity> & IRelationsSqlOptions<Entity>;
+export type ISqlOptions<Entity extends ObjectLiteral> = INoRelationsSqlOptions<Entity> & IRelationsSqlOptions<Entity>;
 
 class DatabaseComponent extends Component {
 
@@ -66,7 +66,7 @@ class DatabaseComponent extends Component {
     this.connected_ = false;
   }
 
-  buildSQL<T = any>(entity: EntityTarget<T>, options: ISqlOptions<T>) {
+  buildSQL<T extends ObjectLiteral>(entity: EntityTarget<T>, options: ISqlOptions<T>) {
     let sqlBuilder = this.manager.getRepository(entity).createQueryBuilder('self');
     if (options.relations && options.relations.length) {
       const innerJoinBuilder = this.manager.getRepository(entity).createQueryBuilder();
