@@ -1,4 +1,4 @@
-import {Any, Between, Equal, FindOptionsWhere, ILike, In, IsNull, LessThan, LessThanOrEqual, Like, MoreThan, MoreThanOrEqual, Not, Raw} from 'typeorm';
+import {And, Any, Between, Equal, FindOptionsWhere, ILike, In, IsNull, LessThan, LessThanOrEqual, Like, MoreThan, MoreThanOrEqual, Not, Raw} from 'typeorm';
 
 export enum WhereOperators {
   any = '$any',
@@ -71,8 +71,12 @@ class WhereBuilder {
       const result = {};
       Object.entries(value).forEach(([k, v]) => {
         const keys = Object.keys(v);
-        if (keys.length == 1 && keys[0].startsWith('$')) {
-          result[k] = this.buildOperator(keys[0] as WhereOperators, v[keys[0]]);
+        if (keys.every(k => k.startsWith('$'))) {
+          if (keys.length === 1) {
+            result[k] = this.buildOperator(keys[0] as WhereOperators, v[keys[0]]);
+          } else {
+            result[k] = And(...keys.map(k => this.buildOperator(k as WhereOperators, v[k])));
+          }
         } else {
           result[k] = this.build(v);
         }
