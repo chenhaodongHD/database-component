@@ -71,7 +71,7 @@ class WhereBuilder {
       const result = {};
       Object.entries(value).forEach(([k, v]) => {
         const keys = Object.keys(v);
-        if (keys.every(k => k.startsWith('$'))) {
+        if (keys.length > 0 && keys.every(k => k.startsWith('$'))) {
           if (keys.length === 1) {
             result[k] = this.buildOperator(keys[0] as WhereOperators, v[keys[0]]);
           } else {
