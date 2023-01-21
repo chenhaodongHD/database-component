@@ -34,8 +34,8 @@ export type ISqlOptions<Entity extends ObjectLiteral> = INoRelationsSqlOptions<E
 
 class DatabaseComponent extends Component {
 
-  constructor(name: string, entities: any[]) {
-    super(name);
+  constructor(entities: any[]) {
+    super();
     this.entities_ = entities;
     this.connected_ = false;
   }
