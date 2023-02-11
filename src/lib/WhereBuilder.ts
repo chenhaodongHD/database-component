@@ -21,7 +21,7 @@ type WhereOperatorCondition = {
 }
 
 type Condition<T> = {
-  [K in keyof T]?: T[K] | WhereOperatorCondition;
+  [K in keyof T]?: T[K] | WhereOperatorCondition | Condition<T[K]>;
 }
 
 export type WhereCondition<T> = Condition<T> | Array<Condition<T>>;
@@ -63,22 +63,22 @@ class WhereBuilder {
   }
 
   static build<T>(value: WhereCondition<T>): FindOptionsWhere<T> | FindOptionsWhere<T>[] {
-    if (Array.isArray(value)) {
+    if (value instanceof Array) {
       return value.map(v => this.build(v)) as FindOptionsWhere<T>[];
     }
 
     if (value instanceof Object) {
       const result = {};
-      Object.entries(value).forEach(([k, v]) => {
+      Object.entries(value).forEach(([key, v]) => {
         const keys = Object.keys(v);
         if (keys.length > 0 && keys.every(k => k.startsWith('$'))) {
           if (keys.length === 1) {
-            result[k] = this.buildOperator(keys[0] as WhereOperators, v[keys[0]]);
+            result[key] = this.buildOperator(keys[0] as WhereOperators, v[keys[0]]);
           } else {
-            result[k] = And(...keys.map(k => this.buildOperator(k as WhereOperators, v[k])));
+            result[key] = And(...keys.map(k => this.buildOperator(k as WhereOperators, v[k])));
           }
         } else {
-          result[k] = this.build(v);
+          result[key] = this.build(v);
         }
       });
       return result;
@@ -88,7 +88,7 @@ class WhereBuilder {
   }
 
   static buildSQL<T>(value: WhereCondition<T>, table?: string): {sql: string, parameters: any[]} {
-    if (Array.isArray(value)) {
+    if (value instanceof Array) {
       const results = value.map(v => this.buildSQL(v, table));
       return {
         sql: results.map(r => `(${r.sql})`).join(' or '),
