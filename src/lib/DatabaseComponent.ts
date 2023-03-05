@@ -1,5 +1,5 @@
 import {Component, IComponentOptions} from '@sora-soft/framework';
-import {DataSourceOptions, EntityTarget, DataSource, ObjectLiteral, EntitySchema} from 'typeorm';
+import {DataSourceOptions, EntityTarget, DataSource, ObjectLiteral, ObjectType} from 'typeorm';
 import {DatabaseError} from './DatabaseError';
 import {DatabaseErrorCode} from './DatabaseErrorCode';
 import {SQLUtility} from './SQLUtility';
@@ -33,7 +33,7 @@ export interface INoRelationsSqlOptions<Entity extends ObjectLiteral> {
 export type ISqlOptions<Entity extends ObjectLiteral> = INoRelationsSqlOptions<Entity> & IRelationsSqlOptions<Entity>;
 
 class DatabaseComponent extends Component {
-  constructor(entities: EntitySchema<unknown>[]) {
+  constructor(entities: ObjectType<unknown>[]) {
     super();
     this.entities_ = entities;
     this.connected_ = false;
@@ -159,7 +159,7 @@ class DatabaseComponent extends Component {
   }
 
   private databaseOptions_: IDatabaseComponentOptions;
-  private entities_: EntitySchema<unknown>[];
+  private entities_: ObjectType<unknown>[];
   private connected_: boolean;
   private dataSource_: DataSource | null;
 }
