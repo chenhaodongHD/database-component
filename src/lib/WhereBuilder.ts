@@ -14,7 +14,7 @@ export enum WhereOperators {
   gte = '$gte',
   not = '$not',
   raw = '$raw',
-};
+}
 
 type WhereOperatorCondition = {
   [K in WhereOperators]?: any;
@@ -27,18 +27,24 @@ type Condition<T> = {
 export type WhereCondition<T> = Condition<T> | Array<Condition<T>>;
 
 class WhereBuilder {
-  private static buildOperator(operator: WhereOperators, value: any) {
+  private static buildOperator(operator: WhereOperators, value: unknown) {
     switch (operator) {
       case WhereOperators.any:
-        return Any(value);
+        if (Array.isArray(value))
+          return Any(value);
+        throw new TypeError('any operation value should be array');
       case WhereOperators.between:
-        return Between(value[0], value[1]);
+        if (Array.isArray(value))
+          return Between(value[0], value[1]);
+        throw new TypeError('between operation value should be array');
       case WhereOperators.eq:
         return Equal(value);
       case WhereOperators.iLike:
         return ILike(value);
       case WhereOperators.in:
-        return In(value);
+        if (Array.isArray(value))
+          return In(value);
+        throw new TypeError('in operation value should be array');
       case WhereOperators.isNull:
         if (value) {
           return IsNull();
@@ -56,9 +62,11 @@ class WhereBuilder {
       case WhereOperators.gte:
         return MoreThanOrEqual(value);
       case WhereOperators.not:
-        return Not(this.build(value));
+        return Not(this.build(value as WhereCondition<unknown>));
       case WhereOperators.raw:
-        return Raw(value);
+        if (typeof value === 'string')
+          return Raw(value);
+        throw new TypeError('in operation value should be string');
     }
   }
 
@@ -70,15 +78,15 @@ class WhereBuilder {
     if (value instanceof Object) {
       const result = {};
       Object.entries(value).forEach(([key, v]) => {
-        const keys = Object.keys(v);
+        const keys = Object.keys(v as Object);
         if (keys.length > 0 && keys.every(k => k.startsWith('$'))) {
           if (keys.length === 1) {
-            result[key] = this.buildOperator(keys[0] as WhereOperators, v[keys[0]]);
+            result[key] = this.buildOperator(keys[0] as WhereOperators, (v as Object)[keys[0]]);
           } else {
-            result[key] = And(...keys.map(k => this.buildOperator(k as WhereOperators, v[k])));
+            result[key] = And(...keys.map(k => this.buildOperator(k as WhereOperators, (v as Object)[k])));
           }
         } else {
-          result[key] = this.build(v);
+          result[key] = this.build(v as Object);
         }
       });
       return result;
@@ -87,34 +95,36 @@ class WhereBuilder {
     return value;
   }
 
-  static buildSQL<T>(value: WhereCondition<T>, table?: string): {sql: string, parameters: any[]} {
+  static buildSQL<T>(value: WhereCondition<T>, table?: string): {sql: string; parameters: unknown[]} {
     if (value instanceof Array) {
       const results = value.map(v => this.buildSQL(v, table));
       return {
         sql: results.map(r => `(${r.sql})`).join(' or '),
         parameters: results.map(r => r.parameters).flat(),
-      }
+      };
     }
 
-    function getFullKey(key: string) {
+    const getFullKey = (key: string) => {
       if (table) {
         return `${table}.${key}`;
       } else {
         return key;
       }
-    }
+    };
 
     const sql: string[] = [];
     const parameters: any[] = [];
     if (value instanceof Object) {
-      Object.entries(value).map(([k, v]) => {
+      Object.entries(value).map(([k, val]) => {
+        const v = val as Object;
         const keys = Object.keys(v);
 
         if (keys.length === 1 && keys[0].startsWith('$')) {
           switch (keys[0]) {
             case WhereOperators.between:
               sql.push(`(${getFullKey(k)} between ? and ?)`);
-              parameters.push(v[keys[0]][0], v[keys[0]][1]);
+              const array = v[keys[0]] as unknown[];
+              parameters.push(array[0], array[1]);
               break;
             case WhereOperators.eq:
               sql.push(`(${getFullKey(k)} = ?)`);
@@ -171,8 +181,8 @@ class WhereBuilder {
     return {
       sql: sql.join(' and '),
       parameters,
-    }
+    };
   }
 }
 
-export {WhereBuilder}
+export {WhereBuilder};

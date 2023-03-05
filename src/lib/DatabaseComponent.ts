@@ -1,12 +1,12 @@
-import {Component, IComponentOptions, Utility} from '@sora-soft/framework';
-import {DataSourceOptions, EntityTarget, OrderByCondition, DataSource, ObjectLiteral} from 'typeorm';
+import {Component, IComponentOptions} from '@sora-soft/framework';
+import {DataSourceOptions, EntityTarget, DataSource, ObjectLiteral, EntitySchema} from 'typeorm';
 import {DatabaseError} from './DatabaseError';
 import {DatabaseErrorCode} from './DatabaseErrorCode';
 import {SQLUtility} from './SQLUtility';
 import {WhereBuilder, WhereCondition} from './WhereBuilder';
 
-// tslint:disable-next-line
-const pkg = require('../../package.json');
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
+const pkg: {version: string} = require('../../package.json');
 
 export interface IDatabaseComponentOptions extends IComponentOptions {
   database: DataSourceOptions;
@@ -16,7 +16,7 @@ export interface IRelationsSqlOptions<Entity extends ObjectLiteral> {
   select?: string[];
   relations: string[];
   innerJoinKey: string;
-  order?: OrderByCondition,
+  order?: [string, 'ASC' | 'DESC'];
   offset?: number;
   limit?: number;
   where?: WhereCondition<Entity>;
@@ -24,7 +24,7 @@ export interface IRelationsSqlOptions<Entity extends ObjectLiteral> {
 
 export interface INoRelationsSqlOptions<Entity extends ObjectLiteral> {
   select?: string[];
-  order?: OrderByCondition,
+  order?: [string, 'ASC' | 'DESC'];
   offset?: number;
   limit?: number;
   where?: WhereCondition<Entity>;
@@ -33,8 +33,7 @@ export interface INoRelationsSqlOptions<Entity extends ObjectLiteral> {
 export type ISqlOptions<Entity extends ObjectLiteral> = INoRelationsSqlOptions<Entity> & IRelationsSqlOptions<Entity>;
 
 class DatabaseComponent extends Component {
-
-  constructor(entities: any[]) {
+  constructor(entities: EntitySchema<unknown>[]) {
     super();
     this.entities_ = entities;
     this.connected_ = false;
@@ -45,8 +44,7 @@ class DatabaseComponent extends Component {
   }
 
   protected async connect() {
-    if (this.connected_)
-      return;
+    if (this.connected_) return;
 
     this.dataSource_ = new DataSource({
       name: this.name_,
@@ -61,15 +59,24 @@ class DatabaseComponent extends Component {
   }
 
   protected async disconnect() {
+    if (!this.dataSource_)
+      return;
     await this.dataSource_.destroy();
     this.dataSource_ = null;
     this.connected_ = false;
   }
 
-  buildSQL<T extends ObjectLiteral>(entity: EntityTarget<T>, options: ISqlOptions<T>) {
-    let sqlBuilder = this.manager.getRepository(entity).createQueryBuilder('self');
+  buildSQL<T extends ObjectLiteral>(
+    entity: EntityTarget<T>,
+    options: ISqlOptions<T>
+  ) {
+    let sqlBuilder = this.manager
+      .getRepository(entity)
+      .createQueryBuilder('self');
     if (options.relations && options.relations.length) {
-      const innerJoinBuilder = this.manager.getRepository(entity).createQueryBuilder();
+      const innerJoinBuilder = this.manager
+        .getRepository(entity)
+        .createQueryBuilder();
       innerJoinBuilder.select(options.innerJoinKey);
       if (options.limit) {
         innerJoinBuilder.limit(options.limit);
@@ -81,7 +88,7 @@ class DatabaseComponent extends Component {
         innerJoinBuilder.where(WhereBuilder.build(options.where));
       }
       if (options.order) {
-        innerJoinBuilder.orderBy(options.order);
+        innerJoinBuilder.orderBy(options.order[0], options.order[1]);
       }
 
       const {sql, parameters} = SQLUtility.prepareQuery(...innerJoinBuilder.getQueryAndParameters());
@@ -96,7 +103,7 @@ class DatabaseComponent extends Component {
         sqlBuilder = sqlBuilder.where(WhereBuilder.build(options.where));
       }
       if (options.order) {
-        sqlBuilder = sqlBuilder.orderBy(options.order);
+        sqlBuilder = sqlBuilder.orderBy(options.order[0], options.order[1]);
       }
       if (options.limit) {
         sqlBuilder = sqlBuilder.limit(options.limit);
@@ -144,21 +151,17 @@ class DatabaseComponent extends Component {
   }
 
   get version() {
-    return pkg.version;
+    return pkg.version ;
   }
 
   get dataSourceOptions() {
     return this.databaseOptions_.database;
   }
 
-  logOptions() {
-    return Utility.hideKeys(this.databaseOptions_.database, ['password'] as any);
-  }
-
   private databaseOptions_: IDatabaseComponentOptions;
-  private entities_: any[];
+  private entities_: EntitySchema<unknown>[];
   private connected_: boolean;
-  private dataSource_: DataSource;
+  private dataSource_: DataSource | null;
 }
 
-export {DatabaseComponent}
+export {DatabaseComponent};

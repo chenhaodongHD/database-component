@@ -1,18 +1,18 @@
 class SQLUtility {
-  static prepareQuery(sql: string, params: any[]) {
+  static prepareQuery(sql: string, params: unknown[]) {
     let finalSQL = sql;
-    const parameters: any = {};
+    const parameters: {[k: number]: unknown} = {};
 
     const m = sql.match(/\?/g);
     if (m === null) {
       return {sql, parameters};
     }
     let index = 0;
-    let value = null;
+    let value: unknown = null;
     for (const m0 of m) {
       switch (typeof params[index]) {
         case 'string':
-          value = `'${params[index]}'`;
+          value = `'${params[index] as string}'`;
           break;
 
         default:
@@ -25,7 +25,7 @@ class SQLUtility {
         parameters[`value${index}`] = params[index];
       } else {
         finalSQL = finalSQL.replace(m0, `:value${index}`);
-        parameters[`value${index}`] = params[index];
+        parameters[`value${index}`] = value;
       }
       index++;
     }
@@ -34,7 +34,7 @@ class SQLUtility {
       sql: finalSQL,
       parameters,
     };
-  };
+  }
 }
 
-export {SQLUtility}
+export {SQLUtility};

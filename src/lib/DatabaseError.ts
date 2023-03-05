@@ -9,5 +9,4 @@ class DatabaseError extends ExError {
   }
 }
 
-
-export {DatabaseError}
+export {DatabaseError};
