@@ -1,5 +1,5 @@
 import {ExError} from '@sora-soft/framework';
-import {DatabaseErrorCode} from './DatabaseErrorCode';
+import {DatabaseErrorCode} from './DatabaseErrorCode.js';
 
 class DatabaseError extends ExError {
   constructor(code: DatabaseErrorCode, message: string) {

@@ -4,16 +4,20 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "rimraf ./dist && tsc",
-    "dev": "npm run build && node ./dist/test",
-    "prepublishOnly": "rimraf ./dist && tsc",
+    "build": "rimraf ./dist && ttsc",
+    "prepublishOnly": "npm run build",
     "preversion": "lint-staged && npm run build",
-    "link": "npm link @sora-soft/framework",
-    "test": "echo \"Error: no test specified\" && exit 1",
     "prepare": "husky install",
     "preCommit": "lint-staged"
   },
   "repository": "git@github.com/sora-soft/database-component.git",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.js",
+    "./typeorm": {
+      "import": "./dist/typeorm.js"
+    }
+  },
   "author": "yaya",
   "license": "WTFPL",
   "bugs": {
@@ -21,7 +25,8 @@
   },
   "homepage": "https://github.com/sora-soft/database-component#readme",
   "dependencies": {
-    "@sora-soft/framework": "^1.9.0",
+    "@sora-soft/framework": "^1.10.2",
+    "@sora-soft/type-guard": "^1.0.2",
     "mysql2": "^2.2.5",
     "reflect-metadata": "^0.1.13",
     "typeorm": "^0.3.11"
@@ -40,17 +45,19 @@
     "@types/assert": "^1.5.4",
     "@types/expect": "^24.3.0",
     "@types/mocha": "^8.2.2",
-    "@types/node": "^14.14.37",
-    "rimraf": "^3.0.2",
-    "typescript": "^4.2.4",
-    "husky": "^8.0.3",
-    "lint-staged": "^13.1.2",
+    "@types/node": "^18.12.1",
     "@typescript-eslint/eslint-plugin": "^5.54.0",
     "@typescript-eslint/parser": "^5.54.0",
     "eslint": "^8.35.0",
+    "eslint-plugin-file-extension-in-import-ts": "^1.0.1",
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-jsdoc": "^40.0.1",
     "eslint-plugin-prefer-arrow": "^1.2.3",
-    "eslint-plugin-unused-imports": "^2.0.0"
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^13.1.2",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.9.0",
+    "ttypescript": "^1.5.15"
   }
 }

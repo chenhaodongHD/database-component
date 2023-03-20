@@ -1,12 +1,15 @@
 import {Component, IComponentOptions} from '@sora-soft/framework';
-import {DataSourceOptions, EntityTarget, DataSource, ObjectLiteral, ObjectType} from 'typeorm';
-import {DatabaseError} from './DatabaseError';
-import {DatabaseErrorCode} from './DatabaseErrorCode';
-import {SQLUtility} from './SQLUtility';
-import {WhereBuilder, WhereCondition} from './WhereBuilder';
+import {ValidateClass, AssertType} from '@sora-soft/type-guard';
+import {readFile} from 'fs/promises';
+import {EntityTarget, DataSource, ObjectLiteral, ObjectType, DataSourceOptions} from 'typeorm';
+import {DatabaseError} from './DatabaseError.js';
+import {DatabaseErrorCode} from './DatabaseErrorCode.js';
+import {SQLUtility} from './SQLUtility.js';
+import {WhereBuilder, WhereCondition} from './WhereBuilder.js';
 
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-var-requires
-const pkg: {version: string} = require('../../package.json');
+const pkg = JSON.parse(
+  await readFile(new URL('../../package.json', import.meta.url), {encoding: 'utf-8'})
+) as {version: string};
 
 export interface IDatabaseComponentOptions extends IComponentOptions {
   database: DataSourceOptions;
@@ -32,6 +35,7 @@ export interface INoRelationsSqlOptions<Entity extends ObjectLiteral> {
 
 export type ISqlOptions<Entity extends ObjectLiteral> = INoRelationsSqlOptions<Entity> & IRelationsSqlOptions<Entity>;
 
+@ValidateClass()
 class DatabaseComponent extends Component {
   constructor(entities: ObjectType<unknown>[]) {
     super();
@@ -39,7 +43,7 @@ class DatabaseComponent extends Component {
     this.connected_ = false;
   }
 
-  protected setOptions(options: IDatabaseComponentOptions) {
+  protected setOptions(@AssertType() options: IDatabaseComponentOptions) {
     this.databaseOptions_ = options;
   }
 

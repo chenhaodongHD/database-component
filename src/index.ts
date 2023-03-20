@@ -1,8 +1,7 @@
 import 'reflect-metadata';
 
-export * from './lib/DatabaseError';
-export * from './lib/DatabaseErrorCode';
-export * from './lib/DatabaseComponent';
-export * from './lib/WhereBuilder';
-export * from './lib/SQLUtility';
-export * from 'typeorm';
+export * from './lib/DatabaseError.js';
+export * from './lib/DatabaseErrorCode.js';
+export * from './lib/DatabaseComponent.js';
+export * from './lib/WhereBuilder.js';
+export * from './lib/SQLUtility.js';
