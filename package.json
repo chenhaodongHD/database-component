@@ -24,13 +24,6 @@
     "url": "https://github.com/sora-soft/database-component/issues"
   },
   "homepage": "https://github.com/sora-soft/database-component#readme",
-  "dependencies": {
-    "@sora-soft/framework": "^1.10.2",
-    "@sora-soft/type-guard": "^1.0.2",
-    "mysql2": "^2.2.5",
-    "reflect-metadata": "^0.1.13",
-    "typeorm": "^0.3.11"
-  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
@@ -40,6 +33,13 @@
     "*.ts": [
       "eslint"
     ]
+  },
+  "dependencies": {
+    "@sora-soft/framework": "^1.10.2",
+    "@sora-soft/type-guard": "^1.0.5",
+    "mysql2": "^2.2.5",
+    "reflect-metadata": "^0.1.13",
+    "typeorm": "^0.3.11"
   },
   "devDependencies": {
     "@types/assert": "^1.5.4",
