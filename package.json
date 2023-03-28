@@ -15,7 +15,8 @@
   "exports": {
     ".": "./dist/index.js",
     "./typeorm": {
-      "import": "./dist/typeorm.js"
+      "import": "./dist/typeorm.js",
+      "types": "./dist/typeorm.d.ts"
     }
   },
   "author": "yaya",
