@@ -52,10 +52,10 @@ class DatabaseComponent extends Component {
 
     this.dataSource_ = new DataSource({
       name: this.name_,
-      ...this.databaseOptions_.database,
-      entities: this.entities_,
       synchronize: false,
       logging: false,
+      ...this.databaseOptions_.database,
+      entities: this.entities_,
     });
 
     await this.dataSource_.initialize();
